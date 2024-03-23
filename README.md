@@ -1,32 +1,45 @@
-# procédure configuration d'une station blanche sous linux.
-apt-get -y install clamav
+# Procédure configuration d'une station blanche sous linux.
 
+### 1- Installer de l'antivirus Clamav
+```
+$ apt-get -y install clamav
+```
 
-
-1) Créer une règle dans /etc/udev/rules.d/pour lancer un script au branchement de la clé USB
-
+---
+### 2- Créer une règle dans le repertoire /etc/udev/rules.d/ pour lancer un script au branchement de la clé USB
+```
 ACTION=="add", KERNEL=="sd[b-z][1-9]*", RUN+="/home/scan.sh $name"
+```
+<em>
+ACTION : permet d’appliquer la règle pour tout ajout de périphérique<br> 
+KERNEL : permet de spécifier le nom de la clé de correspondance, celle-ci doit commencer<br>
+RUN : permet de lancer une, ici c’est un script et $name permet de récupérer le nom de la clé de correspondance.<br>
 
-ACTION : permet d’appliquer la règle pour tout ajout de périphérique
-KERNEL : permet de spécifier le nom de la clé de correspondance, celle-ci doit commencer
-RUN : permet de lancer une, ici c’est un script et $name permet de récupérer le nom de la clé de correspondance.
+</em>
 
-
-2) Création du script pour monter la clé USB et faire le scan
-"""
+---
+### 3- Création du script pour monter la clé USB et faire le scan
+```
 #!/bin/bash
 mkdir -p /media/$1/usb # création du dossier de l'arborescence
 mount /dev/$1 /media/$1/usb # Monter la clé USB dans le répertoire créé précédemment
 
 clamscan --no-summary -r /media/$1/usb/> /tmp/scan.txt # scan tous les répertoires et enregistre la sortie dans le fichier scan.txt
-"""
-
-
-3) Pour le bon fonctionnement et permettre de voir la clé USB monter
-Faire la commande systemctl edit systemd-udevd puis inscrire :
-[Service] MountFlags=shared PrivateMounts=no
-
-"""
+```
+---
+### 4- Pour le bon fonctionnement et permettre de voir la clé USB monter
+Faire la commande 
+```
+$ systemctl edit systemd-udevd
+```
+Puis inscrire
+```
+[Service]
+MountFlags=shared
+PrivateMounts=no
+```
+Enfin créer le script principal
+```
 #!/bin/bash
 # Créer l'arborescence pour la clé USB branché, le $1 permet de récupérer le nom de l'interface
 mkdir -p /media/$1/usb
@@ -60,5 +73,4 @@ umount /dev/$1
 rm -r/media/$1
 # Supprime le fichier de sortie du scan
 rm /tmp/scan.txt
-
-""""
+```
